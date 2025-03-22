@@ -2,6 +2,22 @@ import os
 from datetime import datetime
 from PyPDF2 import PdfReader, PdfWriter
 
+def get_unique_filename(output_folder, loan_number, title, current_date):
+    """
+    Generates a unique filename by adding _1, _2, etc., if needed.
+    """
+    base_filename = f"{loan_number}_{title}_{current_date}"
+    output_path = os.path.join(output_folder, f"{base_filename}.pdf")
+    counter = 1
+
+    # Check if file exists and append counter if needed
+    while os.path.exists(output_path):
+        output_path = os.path.join(output_folder, f"{base_filename}_{counter}.pdf")
+        counter += 1
+
+    return output_path
+
+
 def split_pdf(input_pdf_path, output_folder, page_info, loan_number):
     """
     Splits a PDF into smaller PDFs based on specified page ranges and titles.
@@ -42,9 +58,8 @@ def split_pdf(input_pdf_path, output_folder, page_info, loan_number):
         for page_num in range(start - 1, end):  # Convert to 0-based index
             pdf_writer.add_page(pdf_reader.pages[page_num])
 
-        # Construct the output file name
-        output_filename = f"{loan_number}_{title}_{current_date}.pdf"
-        output_path = os.path.join(output_folder, output_filename)
+        # Construct the output file name with duplicate handling
+        output_path = get_unique_filename(output_folder, loan_number, title, current_date)
 
         try:
             with open(output_path, "wb") as output_file:
@@ -52,6 +67,7 @@ def split_pdf(input_pdf_path, output_folder, page_info, loan_number):
             print(f"Saved: {output_path}")
         except Exception as e:
             print(f"Error saving PDF {output_path}: {e}")
+
 
 if __name__ == "__main__":
     # Input PDF path
@@ -68,8 +84,11 @@ if __name__ == "__main__":
     page_info = {
         (1, 1): "asset",
         (2, 2): "income",
-        (3, 43): "report"
+        (3, 3): "report",
+        (4, 4): "income",
+        (5, 20): "income"
     }
 
     # Split the PDF based on the provided information
     split_pdf(input_pdf_path, output_folder, page_info, loan_number)
+
